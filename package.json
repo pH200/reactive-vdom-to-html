@@ -1,10 +1,10 @@
 {
-  "name": "vdom-to-html",
-  "description": "Turn virtual-dom nodes into HTML",
+  "name": "reactive-vdom-to-html",
+  "description": "Turn virtual-dom nodes into HTML observable",
   "version": "2.0.0",
-  "author": "Nathan Tran <ntran013@gmail.com>",
+  "author": "pH200 <ph.minamo@cytisan.com>",
   "license": "MIT",
-  "repository": "nthtran/vdom-to-html",
+  "repository": "pH200/reactive-vdom-to-html",
   "keywords": [],
   "dependencies": {
     "escape-html": "^1.0.1",
