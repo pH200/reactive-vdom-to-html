@@ -9,6 +9,7 @@
   "dependencies": {
     "escape-html": "^1.0.1",
     "param-case": "^1.0.1",
+    "rx": "^2.5.2",
     "virtual-dom": "^2.0.0",
     "xtend": "^4.0.0"
   },

@@ -8,24 +8,39 @@ var attrHook = require('virtual-dom/virtual-hyperscript/hooks/attribute-hook');
 var paramCase = require('param-case');
 var createAttribute = require('./create-attribute');
 var voidElements = require('./void-elements');
+var Rx = require('rx');
 
 module.exports = toHTML;
 
 function toHTML(node, parent) {
-  if (!node) return '';
+  if (!node) return Rx.Observable.just('');
 
   if (isThunk(node)) {
     node = node.render();
   }
 
-  if (isVNode(node)) {
-    return openTag(node) + tagContent(node) + closeTag(node);
-  } else if (isVText(node)) {
-    if (parent && parent.tagName.toLowerCase() === 'script') return String(node.text);
-    return escape(String(node.text));
+  if (isReactiveVDOMWidget(node)) {
+    return node.getVNodeObservable().flatMap(function (innerNode) {
+      return toHTML(innerNode);
+    });
   }
 
-  return '';
+  if (isVNode(node)) {
+    return tagContent(node).map(function (content) {
+      return openTag(node) + content + closeTag(node);
+    });
+  } else if (isVText(node)) {
+    if (parent && parent.tagName.toLowerCase() === 'script') {
+      return Rx.Observable.just(String(node.text));
+    }
+    return Rx.Observable.just(escape(String(node.text)));
+  }
+
+  return Rx.Observable.just('');
+}
+
+function isReactiveVDOMWidget(node) {
+  return node.isReactiveVDOMWidget && node.getVNodeObservable;
 }
 
 function openTag(node) {
@@ -67,16 +82,22 @@ function openTag(node) {
 
 function tagContent(node) {
   var innerHTML = node.properties.innerHTML;
-  if (innerHTML != null) return innerHTML;
-  else {
-    var ret = '';
+  if (innerHTML != null) {
+    return Rx.Observable.just(innerHTML);
+  } else {
+    var ret = [];
     if (node.children && node.children.length) {
       for (var i = 0, l = node.children.length; i<l; i++) {
         var child = node.children[i];
-        ret += toHTML(child, node);
+        ret.push(toHTML(child, node));
       }
     }
-    return ret;
+    if (ret.length === 0) {
+      return Rx.Observable.just('');
+    }
+    return Rx.Observable.concat(ret).reduce(function (acc, x) {
+      return acc + x;
+    });
   }
 }
 
